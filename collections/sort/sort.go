@@ -1,6 +1,11 @@
 package sort
 
-import "sort"
+import (
+	"fmt"
+	"sort"
+
+	"github.com/ryanrain2016/utils/functools"
+)
 
 type ISort[T comparable] interface {
 	Len() int
@@ -18,6 +23,75 @@ type Sorter[T comparable] struct {
 func SortBy[T comparable](less ...lessFunc[T]) *Sorter[T] {
 	if len(less) == 0 {
 		panic("should has at least one less function")
+	}
+	return &Sorter[T]{
+		less: less,
+	}
+}
+
+func SortByKey[T comparable](key ...any) *Sorter[T] {
+	if len(key) == 0 {
+		panic("should has at least one key function")
+	}
+	less := make([]lessFunc[T], len(key))
+	for i, kf := range key {
+		switch f := kf.(type) {
+		case func(T) int:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		case func(T) float32:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		case func(T) float64:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		case func(T) int8:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		case func(T) int16:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		case func(T) int32:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		case func(T) int64:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		case func(T) uint:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		case func(T) uint8:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		case func(T) uint16:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		case func(T) uint32:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		case func(T) uint64:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		case func(T) string:
+			less[i] = func(t1, t2 T) bool {
+				return f(t1) < f(t2)
+			}
+		default:
+			sig := functools.FuncSignature(kf)
+			panic(fmt.Sprintf("unsupport key function: %s", sig))
+		}
 	}
 	return &Sorter[T]{
 		less: less,
