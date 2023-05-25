@@ -1,53 +1,57 @@
-package utils
+package functools
 
 import (
 	"errors"
 	"math"
 	"reflect"
+
+	"github.com/ryanrain2016/utils"
+	"github.com/ryanrain2016/utils/itertools"
+	"github.com/ryanrain2016/utils/types"
 )
 
 // 将两个值相加
-func Add[T Addable](a, b T) T {
+func Add[T types.Addable](a, b T) T {
 	return a + b
 }
 
 // 将两个值相减
-func Sub[T Number](a, b T) T {
+func Sub[T types.Number](a, b T) T {
 	return a - b
 }
 
 // 将两个值相乘
-func Mul[T Number](a, b T) T {
+func Mul[T types.Number](a, b T) T {
 	return a * b
 }
 
 // 将两个值相除
-func TrueDiv[T OrderedNumber](a, b T) float64 {
+func TrueDiv[T types.OrderedNumber](a, b T) float64 {
 	return float64(a) / float64(b)
 }
 
 // 将两个值相除并向下取整
-func FloorDiv[T Int](a, b T) T {
+func FloorDiv[T types.Int](a, b T) T {
 	return a / b
 }
 
 // 计算两个值的模数
-func Mod[T Int](a, b T) T {
+func Mod[T types.Int](a, b T) T {
 	return a % b
 }
 
 // 将一个值的幂次方
-func Pow[T OrderedNumber](a, b T) T {
+func Pow[T types.OrderedNumber](a, b T) T {
 	return T(math.Pow(float64(a), float64(b)))
 }
 
 // 比较两个值是否小于
-func Lt[T Ordered](a, b T) bool {
+func Lt[T types.Ordered](a, b T) bool {
 	return a < b
 }
 
 // 比较两个值是否小于或等于
-func Le[T Ordered](a, b T) bool {
+func Le[T types.Ordered](a, b T) bool {
 	return a <= b
 }
 
@@ -62,12 +66,12 @@ func Ne[T comparable](a, b T) bool {
 }
 
 // 比较两个值是否大于或等于
-func Ge[T Ordered](a, b T) bool {
+func Ge[T types.Ordered](a, b T) bool {
 	return a >= b
 }
 
 // 比较两个值是否大于
-func Gt[T Ordered](a, b T) bool {
+func Gt[T types.Ordered](a, b T) bool {
 	return a > b
 }
 
@@ -83,8 +87,18 @@ type lener interface {
 	Len() int
 }
 
+type sizer interface {
+	Size() int
+}
+
 // Truth 返回常见类型的真值
-func Truth(o any) bool {
+func Truth(o any) (t bool) {
+	defer func() {
+		e := recover()
+		if e != nil {
+			t = false
+		}
+	}()
 	switch v := o.(type) {
 	case int:
 		return v != 0
@@ -110,19 +124,15 @@ func Truth(o any) bool {
 		return v != 0
 	case uint64:
 		return v != 0
+	case complex64:
+		return v != 0
+	case complex128:
+		return v != 0
 	case string:
 		return v != ""
 	default:
 		if v == nil {
 			return false
-		}
-		objType := reflect.TypeOf(v)
-		if objType.Kind() == reflect.Array ||
-			objType.Kind() == reflect.Slice ||
-			objType.Kind() == reflect.Map ||
-			objType.Kind() == reflect.Chan {
-			sValue := reflect.ValueOf(o)
-			return sValue.Len() != 0
 		}
 		if obj, ok := v.(booler); ok {
 			return obj.Bool()
@@ -130,10 +140,39 @@ func Truth(o any) bool {
 		if obj, ok := v.(lener); ok {
 			return obj.Len() != 0
 		}
-		if obj, ok := v.(stringer); ok {
-			return obj.String() != ""
+		if obj, ok := v.(sizer); ok {
+			return obj.Size() != 0
 		}
-		return false
+		if obj, ok := v.(stringer); ok {
+			if obj.String() == "" {
+				return false
+			}
+		}
+		objType := reflect.TypeOf(v)
+		objValue := reflect.ValueOf(v)
+		if objType.Kind() == reflect.Ptr {
+			if objValue.IsNil() {
+				return false
+			} else {
+				objValue = objValue.Elem()
+			}
+		}
+		if !objValue.IsValid() {
+			return false
+		}
+		if objValue.Kind() == reflect.Struct {
+			return true
+		}
+		if objValue.IsZero() {
+			return false
+		}
+		if objType.Kind() == reflect.Array ||
+			objType.Kind() == reflect.Slice ||
+			objType.Kind() == reflect.Map ||
+			objType.Kind() == reflect.Chan {
+			return objValue.Len() != 0
+		}
+		return true
 	}
 }
 
@@ -149,7 +188,7 @@ func IsNot(a any, b any) bool {
 	return !Is(a, b)
 }
 
-func And[T Int](a, b T) T {
+func And[T types.Int](a, b T) T {
 	return a & b
 }
 
@@ -164,31 +203,31 @@ func Index(a any) int {
 	return -1
 }
 
-func Inv[T Int](a T) T {
+func Inv[T types.Int](a T) T {
 	return ^a
 }
 
-func Invert[T Int](a T) T {
+func Invert[T types.Int](a T) T {
 	return ^a
 }
 
-func Lshift[T Int](a, b T) T {
+func Lshift[T types.Int](a, b T) T {
 	return a << b
 }
 
-func Neg[T Number](a T) T {
+func Neg[T types.Number](a T) T {
 	return -a
 }
 
-func Or[T Int](a, b T) T {
+func Or[T types.Int](a, b T) T {
 	return a | b
 }
 
-func Rshift[T Int](a, b T) T {
+func Rshift[T types.Int](a, b T) T {
 	return a >> b
 }
 
-func Xor[T Int](a, b T) T {
+func Xor[T types.Int](a, b T) T {
 	return a ^ b
 }
 
@@ -247,7 +286,7 @@ func CountOf[T comparable](a []T, b T) (r int) {
 }
 
 func IndexOf[T comparable](a []T, b T) int {
-	return FindIndex(a, b)
+	return itertools.FindIndex(a, b)
 }
 
 func GetItem[T any, U comparable](a map[U]T, key U) T {
@@ -343,8 +382,8 @@ func CallMethod(a any, name string, args ...any) (r []any, err error) {
 		err = errors.New("method not exist")
 		return
 	}
-	rslt := method.Call(Map(func(arg any) reflect.Value { return reflect.ValueOf(arg) }, args))
-	return Map(func(v reflect.Value) any { return v.Interface() }, rslt), nil
+	rslt := method.Call(utils.Map(func(arg any) reflect.Value { return reflect.ValueOf(arg) }, args))
+	return utils.Map(func(v reflect.Value) any { return v.Interface() }, rslt), nil
 }
 
 func MethodCaller(name string, args ...any) func(a any) (r []any, err error) {

@@ -1,4 +1,4 @@
-package utils
+package functools
 
 func Reduce[T any](reduceFunc func(T, T) T, slice []T) T {
 	var rslt T

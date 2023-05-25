@@ -1,104 +1,13 @@
-package utils
+package itertools
 
 import (
-	"errors"
 	"reflect"
-	"runtime"
-	"sync"
+
+	"github.com/ryanrain2016/utils"
 )
 
-func Map[T any, U any](mapFunc func(T) U, slice []T) []U {
-	rslt := make([]U, 0)
-	for _, v := range slice {
-		rslt = append(rslt, mapFunc(v))
-	}
-	return rslt
-}
-
-func MapToChan[T any, U any](mapFunc func(T) U, slice []T) chan U {
-	rslt := make(chan U)
-	go func() {
-		defer func() {
-			close(rslt)
-		}()
-		for _, v := range slice {
-			rslt <- mapFunc(v)
-		}
-	}()
-	return rslt
-}
-
-func ConcurrentMap[T any, U any](mapFunc func(T) U, slice []T) []U {
-	n := len(slice)
-	maxWorkers := runtime.NumCPU()
-	if n < maxWorkers {
-		return Map(mapFunc, slice)
-	}
-	chunkSize := (n + maxWorkers - 1) / maxWorkers
-	rslt := make([]U, n)
-	var wg sync.WaitGroup
-	wg.Add(maxWorkers)
-
-	for i := 0; i < maxWorkers; i++ {
-		start := i * chunkSize
-		end := (i + 1) * chunkSize
-		if end > n {
-			end = n
-		}
-
-		go func(start, end int) {
-			defer wg.Done()
-			for j := start; j < end; j++ {
-				rslt[j] = mapFunc(slice[j])
-			}
-		}(start, end)
-	}
-	wg.Wait()
-	return rslt
-}
-
-func Max[T Ordered](items ...T) (*T, error) {
-	if len(items) == 0 {
-		return nil, errors.New("Max should be called with at least one arguments")
-	}
-	max := &items[0]
-	for i := 1; i < len(items); i++ {
-		if items[i] > *max {
-			max = &items[i]
-		}
-	}
-	return max, nil
-}
-
-func MaxSlice[T Ordered](items []T) (*T, error) {
-	if len(items) == 0 {
-		return nil, errors.New("MaxSlice should be called with slice contains at least one item")
-	}
-	return Max(items...)
-}
-
-func Min[T Ordered](items ...T) (*T, error) {
-	if len(items) == 0 {
-		return nil, errors.New("Min should be called with at least one arguments")
-	}
-	min := &items[0]
-	for i := 1; i < len(items); i++ {
-		if items[i] < *min {
-			min = &items[i]
-		}
-	}
-	return min, nil
-}
-
-func MinSlice[T Ordered](items []T) (*T, error) {
-	if len(items) == 0 {
-		return nil, errors.New("MinSlice should be called with slice contains at least one item")
-	}
-	return Min(items...)
-}
-
 func Zip[T any](items ...[]T) (r [][]T) {
-	minLength, err := MinSlice(Map(func(item []T) int { return len(item) }, items))
+	minLength, err := utils.MinSlice(utils.Map(func(item []T) int { return len(item) }, items))
 	if err != nil {
 		return r
 	}
@@ -122,7 +31,7 @@ func ZipToChan[T any](items ...[]T) chan []T {
 		defer func() {
 			close(r)
 		}()
-		minLength, err := MinSlice(Map(func(item []T) int { return len(item) }, items))
+		minLength, err := utils.MinSlice(utils.Map(func(item []T) int { return len(item) }, items))
 		if err != nil {
 			return
 		}
@@ -142,7 +51,7 @@ func ZipSliceToChan[T any](items [][]T) chan []T {
 }
 
 func ZipAny(items ...[]any) (r [][]any) {
-	minLength, err := MinSlice(Map(func(item []any) int { return len(item) }, items))
+	minLength, err := utils.MinSlice(utils.Map(func(item []any) int { return len(item) }, items))
 	if err != nil {
 		return r
 	}
@@ -158,7 +67,7 @@ func ZipAny(items ...[]any) (r [][]any) {
 }
 
 func ZipLongest[T any](items ...[]T) (r [][]T) {
-	maxLength, err := MaxSlice(Map(func(item []T) int { return len(item) }, items))
+	maxLength, err := utils.MaxSlice(utils.Map(func(item []T) int { return len(item) }, items))
 	if err != nil {
 		return r
 	}
@@ -185,7 +94,7 @@ func ZipLongestToChan[T any](items ...[]T) chan []T {
 		defer func() {
 			close(r)
 		}()
-		maxLength, err := MaxSlice(Map(func(item []T) int { return len(item) }, items))
+		maxLength, err := utils.MaxSlice(utils.Map(func(item []T) int { return len(item) }, items))
 		if err != nil {
 			return
 		}
@@ -204,62 +113,6 @@ func ZipLongestToChan[T any](items ...[]T) chan []T {
 
 func ZipLongestSliceToChan[T any](items [][]T) chan []T {
 	return ZipLongestToChan(items...)
-}
-
-func Any(items ...bool) bool {
-	for _, v := range items {
-		if v {
-			return true
-		}
-	}
-	return false
-}
-
-func AnyFunc[T any](f func(T) bool, items ...T) bool {
-	for _, v := range items {
-		if f(v) {
-			return true
-		}
-	}
-	return false
-}
-
-func AnyFuncSlice[T any](f func(T) bool, items []T) bool {
-	return AnyFunc(f, items...)
-}
-
-func All(items ...bool) bool {
-	for _, v := range items {
-		if !v {
-			return false
-		}
-	}
-	return true
-}
-
-func AllFunc[T any](f func(T) bool, items ...T) bool {
-	for _, v := range items {
-		if !f(v) {
-			return false
-		}
-	}
-	return true
-}
-
-func AllFuncSlice[T any](f func(T) bool, items []T) bool {
-	return AllFunc(f, items...)
-}
-
-func Sum[T Addable](items ...T) T {
-	var r T
-	for _, v := range items {
-		r += v
-	}
-	return r
-}
-
-func SumSlice[T Addable](items []T) T {
-	return Sum(items...)
 }
 
 func Filter[T any](filter func(T) bool, slice []T) []T {
@@ -681,7 +534,7 @@ func SliceToChan[T any](slice []T) chan T {
 func Product[T any](slice [][]T, repeat int) chan []T {
 	out := make(chan []T)
 	if repeat <= 0 {
-		defer func() {
+		go func() {
 			out <- []T{}
 			close(out)
 		}()

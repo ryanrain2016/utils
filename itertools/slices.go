@@ -1,4 +1,4 @@
-package utils
+package itertools
 
 func SliceSub[T comparable](s1, s2 []T) (r []T) {
 	// return slice contains element which is in s1 but not in s2
@@ -65,4 +65,10 @@ func SliceRemoveRepeat[T comparable](s []T) []T {
 	}
 
 	return rslt
+}
+
+func ReverseSlice[U any](s []U) {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
 }
