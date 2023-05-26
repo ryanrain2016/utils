@@ -5,7 +5,7 @@ type UInt interface {
 }
 
 type SInt interface {
-	int | int8 | int16 | int32 | int64 | UInt
+	int | int8 | int16 | int32 | int64
 }
 
 type Int interface {

@@ -11,8 +11,8 @@ func NewDeque[T comparable](maxLen int, items ...T) *Deque[T] {
 		maxLen = -1
 	}
 	dq := &Deque[T]{
-		left:   NewList[T](0),
-		right:  NewList[T](0),
+		left:   NewLinkedList[T](),
+		right:  NewLinkedList[T](),
 		MaxLen: maxLen,
 	}
 	dq.Extend(items)

@@ -197,6 +197,7 @@ func (l *LinkedList[U]) Pop(n ...int) (r U, err error) {
 		if l.tail != nil {
 			l.tail.next = nil
 		}
+		return
 	}
 	nd := l.getNodeFromIndex(index)
 	r = nd.data
