@@ -42,7 +42,7 @@ func TestAVLTree_NewAVLTreeByKey(t *testing.T) {
 }
 
 func TestAVLTree_Insert(t *testing.T) {
-	tree := NewAVLTree[int](func(a, b int) int {
+	tree := NewAVLTree(func(a, b int) int {
 		if a < b {
 			return -1
 		} else if a > b {
@@ -110,7 +110,7 @@ func TestAVLTree_Insert(t *testing.T) {
 }
 
 func TestAVLTree_Delete(t *testing.T) {
-	tree := NewAVLTree[int](func(a, b int) int {
+	tree := NewAVLTree(func(a, b int) int {
 		if a < b {
 			return -1
 		} else if a > b {
@@ -157,7 +157,7 @@ func TestAVLTree_Delete(t *testing.T) {
 }
 
 func TestAVLTree_Search(t *testing.T) {
-	tree := NewAVLTree[int](func(a, b int) int {
+	tree := NewAVLTree(func(a, b int) int {
 		if a < b {
 			return -1
 		} else if a > b {
